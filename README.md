@@ -1,6 +1,13 @@
 # Description
 
-This repository is meant to serve as a general template for how to set up new repositories in the JogetOSS organization. 
+Hash variable type plugin which allows to search by other column.
+
+## Available Formats
+* #formLookup.TABLE.COLUMN[CONDITION=VALUE]#
+* #formLookup.TABLE.COLUMN[CONDITION1=VALUE1,CONDITION2=VALUE2]#
+
+## Example
+#formLookup.staff.staffName[staffNo=123]#
 
 # Getting Help
 

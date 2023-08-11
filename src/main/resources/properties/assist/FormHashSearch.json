@@ -1,0 +1,52 @@
+{
+    "optionGroup" : {
+        "Form Lookup" : [
+            {
+                "value" : "#formLookup.TABLE.COLUMN[QUERY]#",
+                "label" : "@@assist.FormLookup.hashWithQuery@@",
+                "syntax" : [
+                    "#formLookup.",
+                    {
+                        "placeholder" : "TABLE",
+                        "option" : "formDataTable",
+                        "required" : true
+                    },
+                    ".",
+                    {
+                        "placeholder" : "COLUMN",
+                        "option" : "formTableFieldId",
+                        "required" : true
+                    },
+                    {
+                        "placeholder" : "QUERY",
+                        "option" : "query",
+                        "required" : true,
+                        "prefix" : "[",
+                        "postfix" : "]"
+                    },
+                    "#"
+                ]
+            }
+        ]
+    },
+    "optionField" : {
+        "formDataTable" : {
+            "name" : "formDataTable",
+            "label" : "@@assist.FormDataTable@@",
+            "options_ajax" : "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/form/tableName/options",
+            "type" : "selectbox"
+        },
+        "formTableFieldId" : {
+            "name" : "formTableFieldId",
+            "label" : "@@assist.FormField@@",
+            "options_ajax" : "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/form/columns/options",
+            "options_ajax_on_change" : "formDataTable:tableName",
+            "type" : "selectbox"
+        },
+        "query" : {
+            "name" : "query",
+            "label" : "Condition example: \"id = 1\"",
+            "type" : "text"
+        }
+    }
+}
