@@ -64,12 +64,21 @@ public class FormHashSearch extends DefaultHashVariablePlugin {
         String retrieveColumnName = temp[1];
         SearchCondition criteria = new SearchCondition(primaryKey);
         Connection con = null;
+
+        String[] jogetColumns = {"id","datecreated", "datemodified", "createdby", "createdbyname", "modifiedby", "modifiedbyname"};
+        Boolean primColumnSearch = false;
+        for(String c : jogetColumns){
+            if (retrieveColumnName.toLowerCase().equals(c)){
+                primColumnSearch = true;
+                break;
+            }
+        }
         try {
             // retrieve connection from the default datasource
             DataSource ds = (DataSource) AppUtil.getApplicationContext().getBean("setupDataSource");
             con = ds.getConnection();
             PreparedStatement stmt = con.prepareStatement(
-                    "SELECT c_" + retrieveColumnName + " FROM app_fd_" + tableName + criteria.generateQuery());
+                    "SELECT " + (primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName) + " FROM app_fd_" + tableName + criteria.generateQuery());
             int ordinalParam = 1;
             for (String s : criteria.generateParams()) {
                 stmt.setObject(ordinalParam, s);
@@ -78,7 +87,8 @@ public class FormHashSearch extends DefaultHashVariablePlugin {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                result = rs.getString("c_" + retrieveColumnName);
+                // Finds the first matching row
+                result = rs.getString((primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName));
             }
 
         } catch (Exception e) {
