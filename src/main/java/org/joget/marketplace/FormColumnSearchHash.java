@@ -7,27 +7,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-
 import javax.sql.DataSource;
 import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.StringUtil;
-
 import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 
-public class FormHashSearch extends DefaultHashVariablePlugin {
+public class FormColumnSearchHash extends DefaultHashVariablePlugin {
 
     private final static String MESSAGE_PATH = "messages/FormHashSearch";
 
     // Override abstract methods
     @Override
     public String getName() {
-        return "FormColumnSearchHashVariable";
+        return "Form Column Search Hash Variable";
     }
 
     @Override
     public String getVersion() {
-        return "8.0.0";
+        return "8.0.1";
     }
 
     @Override
@@ -53,7 +51,7 @@ public class FormHashSearch extends DefaultHashVariablePlugin {
         if (variable.contains("[") && variable.contains("]")) {
             primaryKey = variable.substring(variable.indexOf("[") + 1, variable.indexOf("]"));
             if (primaryKey.isEmpty()) {
-                LogUtil.debug(FormHashSearch.class.getName(), "#formColumnSearch." + variable + "# is NULL");
+                LogUtil.debug(FormColumnSearchHash.class.getName(), "#formColumnSearch." + variable + "# is NULL");
                 return "";
             }
             variable = variable.substring(0, variable.indexOf("["));
@@ -92,7 +90,7 @@ public class FormHashSearch extends DefaultHashVariablePlugin {
             }
 
         } catch (Exception e) {
-            LogUtil.error(FormHashSearch.class.getName(), e, e.getMessage());
+            LogUtil.error(FormColumnSearchHash.class.getName(), e, e.getMessage());
             return null;
         } finally {
             try {

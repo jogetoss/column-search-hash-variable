@@ -1,5 +1,6 @@
 package org.joget.marketplace;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -29,14 +30,31 @@ public class SearchCondition {
         return (List<String>) this.queries.values();
     }
 
+    public boolean isSystemField(String columnName){
+    String[] jogetColumns = {"id","datecreated", "datemodified", "createdby", "createdbyname", "modifiedby", "modifiedbyname"};
+        for(String c : jogetColumns){
+            if (columnName.toLowerCase().equals(c)){
+                return true;
+            }
+        }
+        return false;
+    }
+        
     public String generateQuery() {
+        List systemFields = Arrays.asList("id", "dateCreated", "dateModified", "createdBy", "createdByName", "modifiedBy", "modifiedByName");
         String initQuery = " WHERE ";
         int i = 1;
         for (String s : this.queries.keySet()){
-            if (i == this.queries.size())
-                initQuery += "c_" + s + " = " + "?";
-            else
-                initQuery += "c_" + s + " = " + "?" + " AND ";
+            
+            if(!isSystemField(s)) {
+                s = "c_" + s;
+            }
+            
+            if (i == this.queries.size()){
+                initQuery += s + " = " + "?";
+            }else{
+                initQuery += s + " = " + "?" + " AND ";
+            }
             i++;
         }
         return initQuery;
