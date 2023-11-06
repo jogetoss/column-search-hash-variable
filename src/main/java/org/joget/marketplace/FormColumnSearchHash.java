@@ -115,8 +115,7 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
     // TODO: Assist user to generate the syntax
     @Override
     public String getPropertyAssistantDefinition() {
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearch.json", null, true,
-                null);
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearch.json", null, true,MESSAGE_PATH);
     }
 
     @Override

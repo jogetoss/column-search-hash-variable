@@ -45,7 +45,7 @@
         },
         "query" : {
             "name" : "query",
-            "label" : "Condition example: \"id = 1\"",
+            "label" : "@@assist.FormLookup.example@@",
             "type" : "text"
         }
     }
