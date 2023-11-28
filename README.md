@@ -7,7 +7,11 @@ Hash variable type plugin which allows to search by other column.
 * #formLookup.TABLE.COLUMN[CONDITION1=VALUE1,CONDITION2=VALUE2]#
 
 ## Example
-#formLookup.staff.staffName[staffNo=123]#
+* #formLookup.staff.staffName[staffNo=123]# -> Single Condition
+* #formLookup.cshvsa_form1.name[gender=male,age=10]# -> Multiple Conditions
+* #formLookup.cshvsa_form1.gender[name={currentUser.username}]# -> Nested Hash
+
+To setup and configure this plugin, please see the [documentation](https://dev.joget.org/community/display/marketplace/Column+Search+Hash+Variable+Plugin).
 
 # Getting Help
 
