@@ -31,13 +31,15 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
     @Override
     public String getLabel() {
         // support i18n
-        return AppPluginUtil.getMessage("org.joget.FormHashPlugin.FormHashSearch.pluginLabel", getClassName(), MESSAGE_PATH);
+        return AppPluginUtil.getMessage("org.joget.FormHashPlugin.FormHashSearch.pluginLabel", getClassName(),
+                MESSAGE_PATH);
     }
 
     @Override
     public String getDescription() {
         // support i18n
-        return AppPluginUtil.getMessage("org.joget.FormHashPlugin.FormHashSearch.pluginDesc", getClassName(), MESSAGE_PATH);
+        return AppPluginUtil.getMessage("org.joget.FormHashPlugin.FormHashSearch.pluginDesc", getClassName(),
+                MESSAGE_PATH);
     }
 
     // Override hash variable abstract methods
@@ -57,16 +59,17 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
             variable = variable.substring(0, variable.indexOf("["));
         }
         String temp[] = variable.split("\\.");
-
         String tableName = temp[0];
         String retrieveColumnName = temp[1];
+
         SearchCondition criteria = new SearchCondition(primaryKey);
         Connection con = null;
 
-        String[] jogetColumns = {"id","datecreated", "datemodified", "createdby", "createdbyname", "modifiedby", "modifiedbyname"};
+        String[] jogetColumns = { "id", "datecreated", "datemodified", "createdby", "createdbyname", "modifiedby",
+                "modifiedbyname" };
         Boolean primColumnSearch = false;
-        for(String c : jogetColumns){
-            if (retrieveColumnName.toLowerCase().equals(c)){
+        for (String c : jogetColumns) {
+            if (retrieveColumnName.toLowerCase().equals(c)) {
                 primColumnSearch = true;
                 break;
             }
@@ -76,13 +79,20 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
             DataSource ds = (DataSource) AppUtil.getApplicationContext().getBean("setupDataSource");
             con = ds.getConnection();
             PreparedStatement stmt = con.prepareStatement(
-                    "SELECT " + (primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName) + " FROM app_fd_" + tableName + criteria.generateQuery());
+                    "SELECT " + (primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName) + " FROM app_fd_"
+                            + tableName + criteria.generateQuery());
             int ordinalParam = 1;
             for (String s : criteria.generateParams()) {
                 stmt.setObject(ordinalParam, s);
                 ordinalParam++;
             }
+
             ResultSet rs = stmt.executeQuery();
+
+            // No records found
+            if (!rs.isBeforeFirst()) {
+                return StringUtil.decryptContent("#formLookup." + variable + "[" + primaryKey + "]#");
+            }
 
             while (rs.next()) {
                 // Finds the first matching row
@@ -115,12 +125,14 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
     // TODO: Assist user to generate the syntax
     @Override
     public String getPropertyAssistantDefinition() {
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearch.json", null, true,MESSAGE_PATH);
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearch.json", null, true,
+                MESSAGE_PATH);
     }
 
     @Override
     public String escapeHashVariableValue(String value) {
-        return AppUtil.escapeHashVariable(value);
+        value = value.replaceAll("&#35;", "#");
+        return value;
     }
 
     // Override getPrefix
