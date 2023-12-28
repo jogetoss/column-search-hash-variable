@@ -57,7 +57,6 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
             variable = variable.substring(0, variable.indexOf("["));
         }
         String temp[] = variable.split("\\.");
-
         String tableName = temp[0];
         String retrieveColumnName = temp[1];
         SearchCondition criteria = new SearchCondition(primaryKey);
@@ -82,7 +81,13 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
                 stmt.setObject(ordinalParam, s);
                 ordinalParam++;
             }
+            
             ResultSet rs = stmt.executeQuery();
+
+            // No records found
+            if (!rs.isBeforeFirst()) {
+                return StringUtil.decryptContent("#formLookup." + variable + "[" + primaryKey + "]#");
+            }
 
             while (rs.next()) {
                 // Finds the first matching row
@@ -120,7 +125,8 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
 
     @Override
     public String escapeHashVariableValue(String value) {
-        return AppUtil.escapeHashVariable(value);
+        value = value.replaceAll("&#35;", "#");
+        return value;
     }
 
     // Override getPrefix
