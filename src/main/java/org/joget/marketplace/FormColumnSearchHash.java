@@ -62,7 +62,7 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
         SearchCondition criteria = new SearchCondition(primaryKey);
         Connection con = null;
 
-        String[] jogetColumns = { "id", "datecreated", "datemodified", "createdby", "createdbyname", "modifiedby", "modifiedbyname" };
+        String[] jogetColumns = {"id","datecreated", "datemodified", "createdby", "createdbyname", "modifiedby", "modifiedbyname"};
         Boolean primColumnSearch = false;
         for(String c : jogetColumns){
             if (retrieveColumnName.toLowerCase().equals(c)){
@@ -120,7 +120,7 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
     // TODO: Assist user to generate the syntax
     @Override
     public String getPropertyAssistantDefinition() {
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearch.json", null, true, MESSAGE_PATH);
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearch.json", null, true,MESSAGE_PATH);
     }
 
     @Override
