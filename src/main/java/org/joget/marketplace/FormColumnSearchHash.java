@@ -90,7 +90,12 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
             }
 
             while (rs.next()) {
+                // Finds the first matching row
                 result = rs.getString((primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName));
+                // If result is found, stop searching for next matching row
+                if (result != null) {
+                    break;
+                }
             }
 
         } catch (Exception e) {
