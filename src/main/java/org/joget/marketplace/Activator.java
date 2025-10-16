@@ -15,6 +15,7 @@ public class Activator implements BundleActivator {
 
         //Register plugin here
         registrationList.add(context.registerService(FormColumnSearchHash.class.getName(), new FormColumnSearchHash(), null));
+        registrationList.add(context.registerService(FormColumnSearchMultipleHash.class.getName(), new FormColumnSearchMultipleHash(), null));
     }
 
     public void stop(BundleContext context) {

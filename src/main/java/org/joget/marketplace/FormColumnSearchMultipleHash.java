@@ -7,20 +7,24 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.sql.DataSource;
 import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.StringUtil;
 import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 
-public class FormColumnSearchHash extends DefaultHashVariablePlugin {
+public class FormColumnSearchMultipleHash extends DefaultHashVariablePlugin {
 
     private final static String MESSAGE_PATH = "messages/FormHashSearch";
 
     // Override abstract methods
     @Override
     public String getName() {
-        return "Form Column Search Hash Variable";
+        return "Form Column Search Hash Variable with Multiple Rows";
     }
 
     @Override
@@ -31,13 +35,13 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
     @Override
     public String getLabel() {
         // support i18n
-        return AppPluginUtil.getMessage("org.joget.FormHashPlugin.FormHashSearch.pluginLabel", getClassName(), MESSAGE_PATH);
+        return AppPluginUtil.getMessage("org.joget.FormHashPlugin.FormHashSearchMultirow.pluginLabel", getClassName(), MESSAGE_PATH);
     }
 
     @Override
     public String getDescription() {
         // support i18n
-        return AppPluginUtil.getMessage("org.joget.FormHashPlugin.FormHashSearch.pluginDesc", getClassName(), MESSAGE_PATH);
+        return AppPluginUtil.getMessage("org.joget.FormHashPlugin.FormHashSearchMultirow.pluginDesc", getClassName(), MESSAGE_PATH);
     }
 
     // Override hash variable abstract methods
@@ -46,12 +50,32 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
         // To process the hash variable in the plugin
         String result = "";
         String primaryKey = null;
-
+        String separator = "";
+        
         // Retrieve the primary key (searching query)
         if (variable.contains("[") && variable.contains("]")) {
-            primaryKey = variable.substring(variable.indexOf("[") + 1, variable.indexOf("]"));
+            
+            Pattern pattern = Pattern.compile("\\[(.*?)\\]");
+            Matcher matcher = pattern.matcher(variable);
+
+            List<String> results = new ArrayList<>();
+            while (matcher.find()) {
+                results.add(matcher.group(1));
+            }
+            
+            if(results.size() == 2){
+                primaryKey = results.get(0);
+                separator = results.get(1);
+            }else{
+                primaryKey = results.get(0);
+            }
+            
+            if(separator.isEmpty()){
+                separator = ", ";
+            }
+            
             if (primaryKey.isEmpty()) {
-                LogUtil.debug(FormColumnSearchHash.class.getName(), "#formColumnSearch." + variable + "# is NULL");
+                LogUtil.debug(FormColumnSearchMultipleHash.class.getName(), "#formColumnSearch." + variable + "# is NULL");
                 return "";
             }
             variable = variable.substring(0, variable.indexOf("["));
@@ -86,20 +110,20 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
 
             // No records found
             if (!rs.isBeforeFirst()) {
-                return StringUtil.decryptContent("#formLookup." + variable + "[" + primaryKey + "]#");
+                return StringUtil.decryptContent("#formLookupMultirow." + variable + "[" + primaryKey + "][" + separator + "]#");
             }
-
+            
+            StringJoiner joiner = new StringJoiner(separator);
             while (rs.next()) {
                 // Finds the first matching row
-                result = rs.getString((primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName));
-                // If result is found, stop searching for next matching row
-                if (result != null) {
-                    break;
-                }
+                String value = rs.getString((primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName));
+                joiner.add(value);
             }
+            
+            result = joiner.toString();
 
         } catch (Exception e) {
-            LogUtil.error(FormColumnSearchHash.class.getName(), e, e.getMessage());
+            LogUtil.error(FormColumnSearchMultipleHash.class.getName(), e, e.getMessage());
             return null;
         } finally {
             try {
@@ -116,14 +140,14 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
     @Override
     public Collection<String> availableSyntax() {
         Collection<String> syntax = new ArrayList<String>();
-        syntax.add("formLookup.TABLE.COLUMN[CONDITION=VALUE]");
-        syntax.add("formLookup.TABLE.COLUMN[CONDITION1=VALUE1,CONDITION2=VALUE2]");
+        syntax.add("formLookupMultirow.TABLE.COLUMN[CONDITION=VALUE][SEPARATOR]");
+        syntax.add("formLookupMultirow.TABLE.COLUMN[CONDITION1=VALUE1,CONDITION2=VALUE2][SEPARATOR]");
         return syntax;
     }
 
     @Override
     public String getPropertyAssistantDefinition() {
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearch.json", null, true,MESSAGE_PATH);
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearchMultirow.json", null, true,MESSAGE_PATH);
     }
 
     @Override
@@ -135,7 +159,7 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
     // Override getPrefix
     @Override
     public String getPrefix() {
-        return "formLookup";
+        return "formLookupMultirow";
     }
 
     @Override
