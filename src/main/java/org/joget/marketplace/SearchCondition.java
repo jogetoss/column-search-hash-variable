@@ -42,7 +42,7 @@ public class SearchCondition {
         
     public String generateQuery() {
         List systemFields = Arrays.asList("id", "dateCreated", "dateModified", "createdBy", "createdByName", "modifiedBy", "modifiedByName");
-        String initQuery = " WHERE ";
+        String initQuery = " WHERE FIND_IN_SET(";
         int i = 1;
         for (String s : this.queries.keySet()){
             
@@ -51,9 +51,9 @@ public class SearchCondition {
             }
             
             if (i == this.queries.size()){
-                initQuery += s + " = " + "?";
+                initQuery += "?, REPLACE(" + s + ", ';', ','))";
             }else{
-                initQuery += s + " = " + "?" + " AND ";
+                initQuery += "?, REPLACE(" + s + ", ';', ','))" + " AND ";
             }
             i++;
         }

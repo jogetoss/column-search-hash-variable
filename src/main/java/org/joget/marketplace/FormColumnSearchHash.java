@@ -25,7 +25,7 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
 
     @Override
     public String getVersion() {
-        return "8.0.3";
+        return "8.0.4";
     }
 
     @Override
