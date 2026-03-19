@@ -1,0 +1,76 @@
+{
+    "optionGroup" : {
+        "Form Lookup Multirow" : [
+            {
+                "value" : "#formLookupMultirow.TABLE.COLUMN[QUERY][SEPARATOR][INDEX]#",
+                "label" : "@@assist.FormLookupMultirow.hashWithQuery@@",
+                "syntax" : [
+                    "#formLookupMultirow.",
+                    {
+                        "placeholder" : "TABLE",
+                        "option" : "formDataTable",
+                        "required" : true
+                    },
+                    ".",
+                    {
+                        "placeholder" : "COLUMN",
+                        "option" : "formTableFieldId",
+                        "required" : true
+                    },
+                    {
+                        "placeholder" : "QUERY",
+                        "option" : "query",
+                        "required" : true,
+                        "prefix" : "[",
+                        "postfix" : "]"
+                    },
+                    {
+                        "placeholder" : "SEPARATOR",
+                        "option" : "separator",
+                        "required" : true,
+                        "prefix" : "[",
+                        "postfix" : "]"
+                    },
+                    {
+                        "placeholder" : "INDEX",
+                        "option" : "index",
+                        "required" : true,
+                        "prefix" : "[",
+                        "postfix" : "]"
+                    },
+                    "#"
+                ]
+            }
+        ]
+    },
+    "optionField" : {
+        "formDataTable" : {
+            "name" : "formDataTable",
+            "label" : "@@assist.FormDataTable@@",
+            "options_ajax" : "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/form/tableName/options",
+            "type" : "selectbox"
+        },
+        "formTableFieldId" : {
+            "name" : "formTableFieldId",
+            "label" : "@@assist.FormField@@",
+            "options_ajax" : "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/form/columns/options",
+            "options_ajax_on_change" : "formDataTable:tableName",
+            "type" : "selectbox"
+        },
+        "query" : {
+            "name" : "query",
+            "label" : "@@assist.FormLookup.example@@",
+            "type" : "text"
+        },
+        "separator" : {
+            "name" : "separator",
+            "label" : "@@assist.FormLookupMultirow.separatorExample@@",
+            "type" : "text"
+        },
+        "index" : {
+            "name" : "index",
+            "label" : "@@assist.FormLookupMultirow.indexExample@@",
+            "type" : "number"
+        }
+    }
+}

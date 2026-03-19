@@ -78,7 +78,7 @@ public class FormColumnSearchMultirowHash extends DefaultHashVariablePlugin {
         }
 
         if (parameters.size() > 1) {
-            separator = parameters.get(1);
+            separator = parameters.get(1).replace("SPACE", " ");
         }
 
         if (parameters.size() > 2) {
@@ -176,7 +176,7 @@ public class FormColumnSearchMultirowHash extends DefaultHashVariablePlugin {
 
     @Override
     public String getPropertyAssistantDefinition() {
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearch.json", null, true, MESSAGE_PATH);
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearchMultirow.json", null, true, MESSAGE_PATH);
     }
 
     @Override

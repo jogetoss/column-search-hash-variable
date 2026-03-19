@@ -12,7 +12,6 @@ For multirow lookup, separator and index is optional. If no separator is specifi
 
 ## Example
 * #formLookup.staff.staffName[staffNo=123]# -> Single Condition
-* #formLookup.cshvsa_form1.gender[name={currentUser.username}]# -> Nested Hash
 * #formLookup.staff.staffName[staffNo=male,staffAge=10]# -> Multiple Conditions
 * #formLookup.staff.staffName[staffEmail={currentUser.email}]# -> Nested Hash
 * #formLookupMultirow.staff.staffName[staffNo=123]# -> Returns all matched records
