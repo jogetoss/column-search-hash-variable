@@ -1,15 +1,23 @@
 # Description
 
-Hash variable type plugin which allows to search by other column.
+Hash variable type plugin which allows to search by other column. It supports multirow lookup, which returns multiple values based on specified separator, with the option to select a specific index from results.
+
+For multirow lookup, separator and index is optional. If no separator is specified, the default value will be ";". If no index is specified, all values will be returned.
 
 ## Available Formats
 * #formLookup.TABLE.COLUMN[CONDITION=VALUE]#
 * #formLookup.TABLE.COLUMN[CONDITION1=VALUE1,CONDITION2=VALUE2]#
+* #formLookupMultirow.TABLE.COLUMN[CONDITION=VALUE][SEPARATOR][INDEX]#
+* #formLookupMultirow.TABLE.COLUMN[CONDITION1=VALUE1,CONDITION2=VALUE2][SEPARATOR][INDEX]#
 
 ## Example
 * #formLookup.staff.staffName[staffNo=123]# -> Single Condition
-* #formLookup.cshvsa_form1.name[gender=male,age=10]# -> Multiple Conditions
 * #formLookup.cshvsa_form1.gender[name={currentUser.username}]# -> Nested Hash
+* #formLookup.staff.staffName[staffNo=male,staffAge=10]# -> Multiple Conditions
+* #formLookup.staff.staffName[staffEmail={currentUser.email}]# -> Nested Hash
+* #formLookupMultirow.staff.staffName[staffNo=123]# -> Returns all matched records
+* #formLookupMultirow.staff.staffName[staffNo=123][,]# -> Returns all matched records separated by `,`
+* #formLookupMultirow.staff.staffName[staffNo=123][;][0]# -> Returns value at index `0` using `,` as separator
 
 To setup and configure this plugin, please see the [documentation](https://dev.joget.org/community/display/marketplace/Column+Search+Hash+Variable+Plugin).
 

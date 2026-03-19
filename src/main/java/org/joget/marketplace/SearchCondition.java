@@ -1,6 +1,5 @@
 package org.joget.marketplace;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -41,23 +40,19 @@ public class SearchCondition {
     }
         
     public String generateQuery() {
-        List systemFields = Arrays.asList("id", "dateCreated", "dateModified", "createdBy", "createdByName", "modifiedBy", "modifiedByName");
-        String initQuery = " WHERE FIND_IN_SET(";
-        int i = 1;
+        StringBuilder initQuery = new StringBuilder(" WHERE ");
+        int i = 0;
         for (String s : this.queries.keySet()){
-            
             if(!isSystemField(s)) {
                 s = "c_" + s;
             }
-            
-            if (i == this.queries.size()){
-                initQuery += "?, REPLACE(" + s + ", ';', ','))";
-            }else{
-                initQuery += "?, REPLACE(" + s + ", ';', ','))" + " AND ";
+            if (i > 0) {
+                initQuery.append(" AND ");
             }
+            initQuery.append("FIND_IN_SET(?, REPLACE(").append(s).append(", ';', ','))");
             i++;
         }
-        return initQuery;
+        return initQuery.toString();
     }
 
     public String[] generateParams(){

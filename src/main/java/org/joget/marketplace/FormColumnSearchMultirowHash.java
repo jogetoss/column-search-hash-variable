@@ -14,14 +14,13 @@ import org.joget.commons.util.StringUtil;
 import org.joget.apps.app.service.AppPluginUtil;
 import org.joget.apps.app.service.AppUtil;
 
-public class FormColumnSearchHash extends DefaultHashVariablePlugin {
+public class FormColumnSearchMultirowHash extends DefaultHashVariablePlugin {
 
     private final static String MESSAGE_PATH = "messages/FormHashSearch";
 
-    // Override abstract methods
     @Override
     public String getName() {
-        return "Form Column Search Hash Variable";
+        return "Form Column Search Multirow Hash Variable";
     }
 
     @Override
@@ -31,27 +30,24 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
 
     @Override
     public String getLabel() {
-        // support i18n
+        // Reuse existing i18n message keys
         return AppPluginUtil.getMessage("org.joget.FormHashPlugin.FormHashSearch.pluginLabel", getClassName(), MESSAGE_PATH);
     }
 
     @Override
     public String getDescription() {
-        // support i18n
+        // Reuse existing i18n message keys
         return AppPluginUtil.getMessage("org.joget.FormHashPlugin.FormHashSearch.pluginDesc", getClassName(), MESSAGE_PATH);
     }
 
-    // Override hash variable abstract methods
     @Override
     public String processHashVariable(String variable) {
-        // To process the hash variable in the plugin
-        String result = "";
         String primaryKey = null;
-
+        String separator = ";"; // Default separator
         Integer index = null;
         List<String> parameters = new ArrayList<String>();
 
-        // Retrieve the parameters (searching query, index)
+        // Retrieve the parameters (searching query, separator, index)
         int bracketIndex = variable.indexOf("[");
         if (bracketIndex != -1) {
             String paramsPart = variable.substring(bracketIndex);
@@ -71,24 +67,29 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
         }
 
         if (parameters.isEmpty()) {
-             LogUtil.debug(FormColumnSearchHash.class.getName(), "#formLookup." + variable + "# is NULL");
+             LogUtil.debug(FormColumnSearchMultirowHash.class.getName(), "#formLookupMultirow." + variable + "# is NULL");
              return "";
         }
 
         primaryKey = parameters.get(0);
         if (primaryKey.isEmpty()) {
-            LogUtil.debug(FormColumnSearchHash.class.getName(), "#formLookup." + variable + "[]# is NULL");
+            LogUtil.debug(FormColumnSearchMultirowHash.class.getName(), "#formLookupMultirow." + variable + "[]# is NULL");
             return "";
         }
 
         if (parameters.size() > 1) {
+            separator = parameters.get(1);
+        }
+
+        if (parameters.size() > 2) {
             try {
-                index = Integer.parseInt(parameters.get(1));
+                index = Integer.parseInt(parameters.get(2));
             } catch (NumberFormatException e) {
-                LogUtil.debug(FormColumnSearchHash.class.getName(), "Invalid index: " + parameters.get(1));
+                LogUtil.debug(FormColumnSearchMultirowHash.class.getName(), "Invalid index: " + parameters.get(2));
             }
         }
-        String temp[] = variable.split("\\.");
+
+        String[] temp = variable.split("\\.");
         String tableName = temp[0];
         String retrieveColumnName = temp[1];
         SearchCondition criteria = new SearchCondition(primaryKey);
@@ -102,6 +103,9 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
                 break;
             }
         }
+
+        List<String> results = new ArrayList<String>();
+
         try {
             // retrieve connection from the default datasource
             DataSource ds = (DataSource) AppUtil.getApplicationContext().getBean("setupDataSource");
@@ -113,12 +117,12 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
                 stmt.setObject(ordinalParam, s);
                 ordinalParam++;
             }
-            
+
             ResultSet rs = stmt.executeQuery();
 
             // No records found
             if (!rs.isBeforeFirst()) {
-                String originalTag = "#formLookup." + variable;
+                String originalTag = "#formLookupMultirow." + variable;
                 for (String p : parameters) {
                     originalTag += "[" + p + "]";
                 }
@@ -126,31 +130,16 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
                 return StringUtil.decryptContent(originalTag);
             }
 
-            List<String> results = new ArrayList<String>();
             while (rs.next()) {
                 String value = rs.getString((primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName));
                 if (value != null) {
+                    // Decrypt each value individually before joining
                     results.add(StringUtil.decryptContent(value));
                 }
             }
 
-            if (results.isEmpty()) {
-                return "";
-            }
-
-            if (index != null) {
-                if (index >= 0 && index < results.size()) {
-                    return results.get(index);
-                } else {
-                    return "";
-                }
-            }
-            
-            // Default to first result for non-multirow
-            result = results.get(0);
-
         } catch (Exception e) {
-            LogUtil.error(FormColumnSearchHash.class.getName(), e, e.getMessage());
+            LogUtil.error(FormColumnSearchMultirowHash.class.getName(), e, e.getMessage());
             return null;
         } finally {
             try {
@@ -161,21 +150,33 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
             }
         }
 
-        return result;
+        if (results.isEmpty()) {
+            return "";
+        }
+
+        if (index != null) {
+            if (index >= 0 && index < results.size()) {
+                return results.get(index);
+            } else {
+                return "";
+            }
+        }
+
+        // Join all results with separator
+        return String.join(separator, results);
     }
 
     @Override
     public Collection<String> availableSyntax() {
         Collection<String> syntax = new ArrayList<String>();
-        syntax.add("formLookup.TABLE.COLUMN[CONDITION=VALUE][INDEX]");
-        syntax.add("formLookup.TABLE.COLUMN[CONDITION1=VALUE1,CONDITION2=VALUE2][INDEX]");
+        syntax.add("formLookupMultirow.TABLE.COLUMN[CONDITION=VALUE][SEPARATOR][INDEX]");
+        syntax.add("formLookupMultirow.TABLE.COLUMN[CONDITION1=VALUE1,CONDITION2=VALUE2][SEPARATOR][INDEX]");
         return syntax;
     }
 
-    // TODO: Assist user to generate the syntax
     @Override
     public String getPropertyAssistantDefinition() {
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearch.json", null, true,MESSAGE_PATH);
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/assist/FormHashSearch.json", null, true, MESSAGE_PATH);
     }
 
     @Override
@@ -184,10 +185,9 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
         return value;
     }
 
-    // Override getPrefix
     @Override
     public String getPrefix() {
-        return "formLookup";
+        return "formLookupMultirow";
     }
 
     @Override
@@ -199,5 +199,5 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
     public String getPropertyOptions() {
         return ""; // Hash Variable does not support property options
     }
-
 }
+
