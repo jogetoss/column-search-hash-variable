@@ -3,9 +3,10 @@ package org.joget.marketplace;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-
+import org.joget.commons.util.LogUtil;
 
 public class SearchCondition {
+
     private HashMap<String, String> queries = new HashMap<String, String>();
 
     //Create constructor for this class
@@ -16,8 +17,19 @@ public class SearchCondition {
     // Create constructor for this class where one String params, gets parsed into a list of queries with columnNames and columnValues (queries are delimited by ',') (names and values delimited by '=')
     public SearchCondition(String query) {
         String[] queries = query.split(",");
+
         for (String q : queries) {
-            this.queries.put(q.split("=")[0], q.split("=")[1]);
+            String[] pair = q.split("=", 2);
+
+            if (pair.length != 2) {
+                LogUtil.debug(SearchCondition.class.getName(),
+                        "Invalid search condition: " + q + ". Expected format COLUMN=VALUE");
+                throw new IllegalArgumentException(
+                        "Invalid search condition \"" + q
+                        + "\". Expected format: COLUMN=VALUE");
+            }
+
+            this.queries.put(pair[0], pair[1]);
         }
     }
 
@@ -29,21 +41,21 @@ public class SearchCondition {
         return (List<String>) this.queries.values();
     }
 
-    public boolean isSystemField(String columnName){
-    String[] jogetColumns = {"id","datecreated", "datemodified", "createdby", "createdbyname", "modifiedby", "modifiedbyname"};
-        for(String c : jogetColumns){
-            if (columnName.toLowerCase().equals(c)){
+    public boolean isSystemField(String columnName) {
+        String[] jogetColumns = {"id", "datecreated", "datemodified", "createdby", "createdbyname", "modifiedby", "modifiedbyname"};
+        for (String c : jogetColumns) {
+            if (columnName.toLowerCase().equals(c)) {
                 return true;
             }
         }
         return false;
     }
-        
+
     public String generateQuery() {
         StringBuilder initQuery = new StringBuilder(" WHERE ");
         int i = 0;
-        for (String s : this.queries.keySet()){
-            if(!isSystemField(s)) {
+        for (String s : this.queries.keySet()) {
+            if (!isSystemField(s)) {
                 s = "c_" + s;
             }
             if (i > 0) {
@@ -55,10 +67,10 @@ public class SearchCondition {
         return initQuery.toString();
     }
 
-    public String[] generateParams(){
+    public String[] generateParams() {
         String[] params = new String[this.queries.size()];
         int i = 0;
-        for (String key : this.queries.keySet()){
+        for (String key : this.queries.keySet()) {
             // params[i] = "c_" + key;
             params[i] = this.queries.get(key);
             // i += 2;
