@@ -25,7 +25,7 @@ public class FormColumnSearchMultirowHash extends DefaultHashVariablePlugin {
 
     @Override
     public String getVersion() {
-        return "8.0.6";
+        return "8.0.7";
     }
 
     @Override
@@ -77,6 +77,11 @@ public class FormColumnSearchMultirowHash extends DefaultHashVariablePlugin {
             return "";
         }
 
+        if (SearchCondition.isBlank(primaryKey)) {
+            LogUtil.debug(FormColumnSearchMultirowHash.class.getName(), "#formLookupMultirow." + variable + "[" + primaryKey + "]# has no value to search for");
+            return "";
+        }
+
         if (parameters.size() > 1) {
             separator = parameters.get(1).replace("SPACE", " ");
         }
@@ -92,7 +97,7 @@ public class FormColumnSearchMultirowHash extends DefaultHashVariablePlugin {
         String[] temp = variable.split("\\.");
         String tableName = temp[0];
         String retrieveColumnName = temp[1];
-        SearchCondition criteria = new SearchCondition(primaryKey);
+        List<SearchCondition> conditionList = SearchCondition.expand(primaryKey);
         Connection con = null;
 
         String[] jogetColumns = {"id","datecreated", "datemodified", "createdby", "createdbyname", "modifiedby", "modifiedbyname"};
@@ -105,37 +110,44 @@ public class FormColumnSearchMultirowHash extends DefaultHashVariablePlugin {
         }
 
         List<String> results = new ArrayList<String>();
+        boolean anyMatched = false;
 
         try {
             // retrieve connection from the default datasource
             DataSource ds = (DataSource) AppUtil.getApplicationContext().getBean("setupDataSource");
             con = ds.getConnection();
-            PreparedStatement stmt = con.prepareStatement(
-                    "SELECT " + (primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName) + " FROM app_fd_" + tableName + criteria.generateQuery());
-            int ordinalParam = 1;
-            for (String s : criteria.generateParams()) {
-                stmt.setObject(ordinalParam, s);
-                ordinalParam++;
+
+            // Run one lookup per expanded condition (e.g. one per id in a multi-value key), preserving input order
+            for (SearchCondition criteria : conditionList) {
+                PreparedStatement stmt = con.prepareStatement(
+                        "SELECT " + (primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName) + " FROM app_fd_" + tableName + criteria.generateQuery());
+                int ordinalParam = 1;
+                for (String s : criteria.generateParams()) {
+                    stmt.setObject(ordinalParam, s);
+                    ordinalParam++;
+                }
+
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    anyMatched = true;
+                    String value = rs.getString((primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName));
+                    if (value != null) {
+                        // Decrypt each value individually before joining
+                        results.add(StringUtil.decryptContent(value));
+                    }
+                }
+                rs.close();
+                stmt.close();
             }
 
-            ResultSet rs = stmt.executeQuery();
-
-            // No records found
-            if (!rs.isBeforeFirst()) {
+            // No records found for any of the searched values
+            if (!anyMatched) {
                 String originalTag = "#formLookupMultirow." + variable;
                 for (String p : parameters) {
                     originalTag += "[" + p + "]";
                 }
                 originalTag += "#";
                 return StringUtil.decryptContent(originalTag);
-            }
-
-            while (rs.next()) {
-                String value = rs.getString((primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName));
-                if (value != null) {
-                    // Decrypt each value individually before joining
-                    results.add(StringUtil.decryptContent(value));
-                }
             }
 
         } catch (Exception e) {

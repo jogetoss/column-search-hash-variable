@@ -26,7 +26,7 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
 
     @Override
     public String getVersion() {
-        return "8.0.6";
+        return "8.0.7";
     }
 
     @Override
@@ -81,6 +81,11 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
             return "";
         }
 
+        if (SearchCondition.isBlank(primaryKey)) {
+            LogUtil.debug(FormColumnSearchHash.class.getName(), "#formLookup." + variable + "[" + primaryKey + "]# has no value to search for");
+            return "";
+        }
+
         if (parameters.size() > 1) {
             try {
                 index = Integer.parseInt(parameters.get(1));
@@ -91,7 +96,7 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
         String temp[] = variable.split("\\.");
         String tableName = temp[0];
         String retrieveColumnName = temp[1];
-        SearchCondition criteria = new SearchCondition(primaryKey);
+        List<SearchCondition> conditionList = SearchCondition.expand(primaryKey);
         Connection con = null;
 
         String[] jogetColumns = {"id","datecreated", "datemodified", "createdby", "createdbyname", "modifiedby", "modifiedbyname"};
@@ -106,32 +111,40 @@ public class FormColumnSearchHash extends DefaultHashVariablePlugin {
             // retrieve connection from the default datasource
             DataSource ds = (DataSource) AppUtil.getApplicationContext().getBean("setupDataSource");
             con = ds.getConnection();
-            PreparedStatement stmt = con.prepareStatement(
-                    "SELECT " + (primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName) + " FROM app_fd_" + tableName + criteria.generateQuery());
-            int ordinalParam = 1;
-            for (String s : criteria.generateParams()) {
-                stmt.setObject(ordinalParam, s);
-                ordinalParam++;
-            }
-            
-            ResultSet rs = stmt.executeQuery();
 
-            // No records found
-            if (!rs.isBeforeFirst()) {
+            List<String> results = new ArrayList<String>();
+            boolean anyMatched = false;
+
+            // Run one lookup per expanded condition (e.g. one per id in a multi-value key), preserving input order
+            for (SearchCondition criteria : conditionList) {
+                PreparedStatement stmt = con.prepareStatement(
+                        "SELECT " + (primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName) + " FROM app_fd_" + tableName + criteria.generateQuery());
+                int ordinalParam = 1;
+                for (String s : criteria.generateParams()) {
+                    stmt.setObject(ordinalParam, s);
+                    ordinalParam++;
+                }
+
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    anyMatched = true;
+                    String value = rs.getString((primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName));
+                    if (value != null) {
+                        results.add(StringUtil.decryptContent(value));
+                    }
+                }
+                rs.close();
+                stmt.close();
+            }
+
+            // No records found for any of the searched values
+            if (!anyMatched) {
                 String originalTag = "#formLookup." + variable;
                 for (String p : parameters) {
                     originalTag += "[" + p + "]";
                 }
                 originalTag += "#";
                 return StringUtil.decryptContent(originalTag);
-            }
-
-            List<String> results = new ArrayList<String>();
-            while (rs.next()) {
-                String value = rs.getString((primColumnSearch ? retrieveColumnName : "c_" + retrieveColumnName));
-                if (value != null) {
-                    results.add(StringUtil.decryptContent(value));
-                }
             }
 
             if (results.isEmpty()) {

@@ -14,9 +14,11 @@ For multirow lookup, separator and index is optional. If no separator is specifi
 * #formLookup.staff.staffName[staffNo=123]# -> Single Condition
 * #formLookup.staff.staffName[staffNo=male,staffAge=10]# -> Multiple Conditions
 * #formLookup.staff.staffName[staffEmail={currentUser.email}]# -> Nested Hash
+* #formLookup.staff.staffName[staffNo=123;456]# -> Multi-value key, returns the first match (e.g. `123`'s name)
 * #formLookupMultirow.staff.staffName[staffNo=123]# -> Returns all matched records
 * #formLookupMultirow.staff.staffName[staffNo=123][,]# -> Returns all matched records separated by `,`
 * #formLookupMultirow.staff.staffName[staffNo=123][;][0]# -> Returns value at index `0` using `,` as separator
+* #formLookupMultirow.staff.staffName[staffNo=123;456][, ]# -> Multi-value key, returns each matched name joined by `, ` (e.g. `Alice, Bob`)
 
 To setup and configure this plugin, please see the [documentation](https://dev.joget.org/community/display/marketplace/Column+Search+Hash+Variable+Plugin).
 
